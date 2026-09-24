@@ -1,4 +1,9 @@
-# Technical Implementation (TI) — Process Guide
+---
+name: tech-implementation
+description: Create a Technical Implementation (TI) design document — staged workflow with codebase research, explicit approvals, subagent reviews, and optional publishing. Use when the user asks to create, write, or design a TI.
+---
+
+# Technical Implementation (TI)
 
 Instructions for an AI assistant to guide the creation of a Technical Implementation document — a pre-development design document covering solution concept, key decisions, risks, and rollout plan.
 
@@ -6,15 +11,15 @@ Instructions for an AI assistant to guide the creation of a Technical Implementa
 
 ## Configuration
 
-Defaults are built in. Override in your project's AI assistant configuration or by providing values when invoking the skill.
+Defaults are built in. Override them in the project's AI assistant configuration or by providing values when invoking the skill.
 
-| Setting | Default | Description |
-| ------- | ------- | ----------- |
-| `standard_path` | `_tech-implementation/standard.md` | Path to the TI document standard |
-| `output_dir` | `_tech-implementation/tasks/` | Directory for generated TI documents |
-| `language` | Auto-detect from user | Language for dialog and document |
+| Setting         | Default                            | Description                          |
+| --------------- | ---------------------------------- | ------------------------------------ |
+| `standard_path` | `_tech-implementation/standard.md` | Path to the TI document standard     |
+| `output_dir`    | `_tech-implementation/tasks/`      | Directory for generated TI documents |
+| `language`      | Auto-detect from user              | Language for dialog and document     |
 
-If your project has a custom standard at `standard_path` — use it. If no file exists at that path, use the Built-in Standard Reference at the bottom of this guide.
+If the project has a custom standard at `standard_path`, use it. If no file exists at that path, use the Built-in Standard Reference at the bottom of this skill file.
 
 ---
 
@@ -33,7 +38,7 @@ If your project has a custom standard at `standard_path` — use it. If no file 
 
 ## Subagents
 
-Steps marked with **[subagent]** must be delegated to a separate subagent using a capable model (Opus, Sol, Gemini Pro, or equivalent). This enables parallel execution and deeper analysis without overloading the main conversation context.
+Every **[subagent]** step must run in an independent subagent using the strongest reasoning model available to the host — Opus for Anthropic, Sol for OpenAI, Gemini Pro for Google, or the equivalent top-tier model of another provider. Never skip, simulate in the main context, or replace with a lighter workflow. Run independent subagent tasks in parallel when inputs are ready. Return only the relevant findings to the main conversation.
 
 ---
 
@@ -41,11 +46,12 @@ Steps marked with **[subagent]** must be delegated to a separate subagent using 
 
 ### Stage 1. Data Collection & Research
 
-> **🔴 CRITICAL:** After completing this stage — MUST re-read this guide before proceeding to the next stage.
+> **🔴 CRITICAL:** After completing this stage — MUST reload this skill to refresh the instructions before proceeding to the next stage.
 
 #### 1.1. Receive inputs
 
 Obtain the task's source data from the user. Possible sources:
+
 - Link to a task in a tracker (Jira, Linear, GitHub Issues, YouTrack, etc.)
 - Article in a knowledge base (Confluence, Notion, Google Docs, etc.)
 - Local file
@@ -56,7 +62,7 @@ Inputs may be provided together with the TI request — do not re-ask if already
 
 #### 1.2. Load the standard
 
-Read the standard at the configured `standard_path`. If not found, use the Built-in Standard Reference at the bottom of this guide. Keep the standard in mind for all subsequent steps.
+Read the standard at the configured `standard_path`. If it is missing, use the Built-in Standard Reference at the bottom of this skill file. Keep the standard in mind for all subsequent steps.
 
 **Important:** Check which sections the standard defines. The stages below (Decision Matrix, Security, Performance, Release & Rollback) are executed **only** if the corresponding section exists in the loaded standard. If a section is absent from the standard — skip the corresponding stage entirely.
 
@@ -64,14 +70,15 @@ Read the standard at the configured `standard_path`. If not found, use the Built
 
 Classify the task by scale:
 
-| Type | Description | Impact on existing code |
-| ---- | ----------- | ----------------------- |
-| **New service** | Creating a new microservice / module from scratch | Minimal — integration points |
-| **New feature** | New functionality in an existing service | Medium — fitting into current architecture |
-| **Enhancement** | Changing / extending existing functionality | High — touches working code |
-| **Integration** | Connecting an external service / API | Depends on integration depth |
+| Type            | Description                                       | Impact on existing code                    |
+| --------------- | ------------------------------------------------- | ------------------------------------------ |
+| **New service** | Creating a new microservice / module from scratch | Minimal — integration points               |
+| **New feature** | New functionality in an existing service          | Medium — fitting into current architecture |
+| **Enhancement** | Changing / extending existing functionality       | High — touches working code                |
+| **Integration** | Connecting an external service / API              | Depends on integration depth               |
 
 At this step:
+
 - Minimize codebase access
 - Ask the user: how ready is the current code for this feature
 - Run a quick verification of user's claims (existence of services, modules)
@@ -96,6 +103,7 @@ Describe the collected context in bullet points — without diving into technica
 - For each component: briefly propose options (one sentence per option), wait for the answer
 
 **Critical decisions.** If a question affects infrastructure, security, load, or other risks — switch to deep discussion mode:
+
 - Propose several solution variants with arguments for and against
 - Ask the user to justify their choice
 - Ask what's wrong with the alternative
@@ -113,6 +121,7 @@ Collect all accepted decisions into a short summary. Ask the user — is this su
 #### 1.8. Risk analysis
 
 Two directions:
+
 1. **Hidden dependencies** — are there dependencies in the product that could affect the feature or that the feature could affect
 2. **Flow walkthrough** — mentally walk through all feature scenarios, identify what requires further work
 
@@ -121,7 +130,7 @@ Two directions:
 
 ### Stage 2. Formulating the Solution Concept
 
-> **🔴 CRITICAL:** After completing this stage — MUST re-read this guide before proceeding to the next stage.
+> **🔴 CRITICAL:** After completing this stage — MUST reload this skill to refresh the instructions before proceeding to the next stage.
 
 Goal — produce the text for the "Solution Concept" section of the TI document.
 
@@ -136,10 +145,12 @@ Load the standard at `standard_path`. This stage relies fully on the standard.
 Based on information collected in Stage 1 — formulate theses, from the most global to the less significant.
 
 **Batch approval:**
+
 - If there are **up to ~10 theses** — present them all at once for approval
 - If there are **more than ~10** — group by semantic blocks and present one group at a time
 
 For each thesis (or batch), the user chooses:
+
 - **Agree** — thesis accepted
 - **Skip, not important** — thesis not included in the TI
 - **Disagree, need to discuss** — proceed to discussion and refinement
@@ -151,6 +162,7 @@ If a diagram is needed — agree on it within the same dialog.
 Based on accepted theses — formulate the coherent text of the "Solution Concept" section. Preserve the agreed formulations as much as possible — correction is only allowed for coherence and conciseness.
 
 **Formatting** (see standard):
+
 - Group theses into semantic blocks, each block — a subsection (`###`)
 - Prefer lists and structural elements over continuous text. Multiple ideas in a paragraph — break into points
 - Connections between components (routes, conditions, dependencies) — as lists, not prose
@@ -165,7 +177,7 @@ After final approval — write the text to the TI file.
 
 ### Stage 3. Filling Other Sections
 
-> **🔴 CRITICAL:** After completing this stage — MUST re-read this guide before proceeding to the next stage.
+> **🔴 CRITICAL:** After completing this stage — MUST reload this skill to refresh the instructions before proceeding to the next stage.
 
 **Important:** Execute each sub-stage below **only** if the corresponding section exists in the loaded standard. If a section is absent — skip the sub-stage entirely.
 
@@ -188,12 +200,14 @@ Filled only for decisions that are important and merit documentation.
 Filled **always** (when present in the standard).
 
 **If risks were identified earlier (Stages 1–2):**
+
 - Present each identified risk to the user:
   - **Agree** — risk is included
   - **Skip, not important** — risk is not included
   - **Disagree, need to discuss** — proceed to discussion
 
 **If no risks were identified earlier:**
+
 - Ask the user: do they see security risks in this task
 - If the user sees no risks — proceed to formatting (see "No risks" below)
 - If the user sees risks or there are doubts — launch research **[subagent]**. Present findings to the user:
@@ -204,6 +218,7 @@ Filled **always** (when present in the standard).
 **No risks:** fill the section with a statement that the task carries no security risks, with justification.
 
 **Risks agreed:**
+
 1. Formulate all agreed risks, write to the file
 2. For each risk — propose a mitigation (how we address it) or justification (why the risk is acceptable). Draft the initial formulation independently based on collected data
 3. Ask the user about each solution separately. If the user disagrees — listen to their variant, critically analyze, resolve disagreements in dialog
@@ -246,11 +261,13 @@ Filled **always** (when present in the standard).
 Launch a deep investigation of the accepted solution **[subagent]**. Goal — identify potential flow improvements that may go beyond the original task scope.
 
 Context for the analysis:
+
 - Full text of the current TI document
 - Codebase context collected in previous stages
 - Original task requirements
 
 Look for:
+
 - Non-obvious optimizations of interactions between components
 - Opportunities to simplify or unify flows
 - Missed edge cases worth covering at the concept level
@@ -261,6 +278,7 @@ Look for:
 Each found proposal — validate in a separate instance **[subagent]**. One instance per proposal. Exception: tightly related proposals that are part of a single flow may be analyzed together in one instance.
 
 Validation answers the question: **is this improvement truly needed?**
+
 - Does it add real value for the user or the system?
 - Is the implementation complexity justified?
 - Does it overload the solution with unnecessary functionality?
@@ -289,7 +307,7 @@ Re-read the entire TI document. Ensure consistency and coherence. Inform the use
 
 > **Skip this stage entirely if running as a subagent or part of an automated pipeline.**
 
-Propose to the user to publish the document. Check available external tool integrations (task trackers like Jira/Linear/GitHub, knowledge bases like Confluence/Notion, etc.) and offer them as publishing targets. Ask where the user wants to publish. If the user provides a target — publish. If the user declines — done.
+Propose to the user to publish the document. Check available external tool integrations (task trackers like Jira/Linear/GitHub, knowledge bases like Confluence/Notion, etc.) and offer them as publishing targets. Ask where the user wants to publish. If the user provides a target, publish through that integration. If the user declines, finish without publishing. Do not substitute manual copy instructions for an unavailable integration.
 
 ---
 
@@ -300,6 +318,7 @@ Used as fallback when no standard file exists at the configured `standard_path`.
 **Required sections:** Introduction, Solution Concept, Decision Matrix (when alternatives exist), Security, Performance, Release & Rollback.
 
 **Key principles:**
+
 - Describe the concept, not implementation details
 - Only key fields that affect logic
 - Every risk section filled always — "no risks" with justification if none

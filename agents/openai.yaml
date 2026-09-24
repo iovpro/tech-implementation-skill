@@ -1,0 +1,4 @@
+interface:
+  display_name: "Technical Implementation"
+  short_description: "Create an approved technical solution design"
+  default_prompt: "Use $tech-implementation to create a Technical Implementation document for this task."
